@@ -3,80 +3,746 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>日常記帳 PWA</title>
+    <title>智能記帳 PWA</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#ffffff">
     <style>
-        /* 這裡放之前最新的 CSS 樣式，為了篇幅我省略，請直接將之前 "全能統計版" 的 CSS 貼在這裡 */
-        /* ... CSS ... */
-        :root { --bg-color: #f4f4f9; --card-bg: #ffffff; --text-color: #333; --income-color: #2ecc71; --expense-color: #e74c3c; --bar-bg: #eee; --border-radius: 12px; --input-bg: #fff; --border-color: #ddd; --warning-bg: #fff3cd; --warning-text: #856404; }
-        @media (prefers-color-scheme: dark) { :root { --bg-color: #121212; --card-bg: #1e1e1e; --text-color: #e0e0e0; --input-bg: #2c2c2c; --border-color: #444; --bar-bg: #333; --warning-bg: #4d3e14; --warning-text: #ffea8a; } }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 15px; padding-top: 5px; display: flex; justify-content: center; flex-direction: column; align-items: center; }
+        :root {
+            --bg-color: #f4f4f9;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --income-color: #2ecc71;
+            --expense-color: #e74c3c;
+            --bar-bg: #eee;
+            --border-radius: 12px;
+            --input-bg: #fff;
+            --border-color: #ddd;
+            --warning-bg: #fff3cd;
+            --warning-text: #856404;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #121212;
+                --card-bg: #1e1e1e;
+                --text-color: #e0e0e0;
+                --input-bg: #2c2c2c;
+                --border-color: #444;
+                --bar-bg: #333;
+                --warning-bg: #4d3e14;
+                --warning-text: #ffea8a;
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 15px;
+            padding-top: 5px;
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+        }
+
         .container { width: 100%; max-width: 600px; }
-        #backupAlert { background-color: var(--warning-bg); color: var(--warning-text); padding: 10px; width: 100%; max-width: 600px; text-align: center; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ffeeba; display: none; font-size: 0.9rem; cursor: pointer; }
+        
+        #backupAlert {
+            background-color: var(--warning-bg);
+            color: var(--warning-text);
+            padding: 10px;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ffeeba;
+            display: none;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
         h2 { text-align: center; margin-bottom: 15px; font-size: 1.5rem; }
-        .card { background: var(--card-bg); padding: 20px; border-radius: var(--border-radius); box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .type-switcher { display: flex; margin-bottom: 15px; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 4px; }
-        .type-option { flex: 1; text-align: center; padding: 10px; cursor: pointer; border-radius: 6px; font-weight: bold; transition: all 0.2s; }
+
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        /* 類型切換 */
+        .type-switcher {
+            display: flex;
+            margin-bottom: 15px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 4px;
+        }
+        .type-option {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
         .type-option.active.expense { background-color: var(--expense-color); color: white; }
         .type-option.active.income { background-color: var(--income-color); color: white; }
+
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 0.9rem; }
-        input, select { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; box-sizing: border-box; font-size: 16px; background: var(--input-bg); color: var(--text-color); }
-        button { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 16px;
+            background: var(--input-bg);
+            color: var(--text-color);
+        }
+
+        /* 按鈕群組 */
+        button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
         button:active { opacity: 0.8; }
         .btn-add { background-color: #333; color: white; }
         .btn-update { background-color: #ff9800; color: white; display: none; }
         .btn-cancel { background-color: #777; color: white; display: none; margin-bottom: 15px; }
+        
         .btn-export { background-color: #2196F3; color: white; }
         .btn-import { background-color: #9C27B0; color: white; }
         .btn-clear { background-color: #999; color: white; }
-        .filter-container { background-color: var(--bg-color); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color); }
-        .date-range-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-        .filter-label { font-size: 0.8rem; color: #888; margin-bottom: 4px; display: block; }
-        .search-box { position: relative; display: flex; gap: 8px; }
-        .search-box input { padding-left: 35px; flex: 1; }
-        .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); opacity: 0.5; }
-        .btn-reset { width: auto; padding: 0 15px; margin: 0; background-color: #607D8B; color: white; font-size: 0.9rem; }
+        
+        /* 搜尋過濾區樣式 */
+        .filter-container {
+            background-color: var(--bg-color);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+        }
+        .date-range-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .filter-label {
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 4px;
+            display: block;
+        }
+        .search-box {
+            position: relative;
+            display: flex;
+            gap: 8px;
+        }
+        .search-box input {
+            padding-left: 35px;
+            flex: 1;
+        }
+        .search-icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.5;
+        }
+        .btn-reset {
+            width: auto;
+            padding: 0 15px;
+            margin: 0;
+            background-color: #607D8B;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        /* 表格樣式 */
         table { width: 100%; border-collapse: collapse; margin-top: 5px; }
         th, td { text-align: left; padding: 12px 5px; border-bottom: 1px solid var(--border-color); font-size: 0.95rem; }
         th { color: #888; font-weight: normal; font-size: 0.85rem; }
         .amount { text-align: right; font-weight: bold; white-space: nowrap;}
         .text-expense { color: var(--expense-color); }
         .text-income { color: var(--income-color); }
-        .action-btn { background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 0 5px; width: auto; display: inline; }
-        .stats-summary { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; text-align: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); }
+        
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 0 5px;
+            width: auto;
+            display: inline;
+        }
+
+        /* 統計樣式 */
+        .stats-summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
         .stat-box small { display: block; color: #888; font-size: 0.8rem; margin-bottom: 5px; }
         .stat-box span { font-weight: bold; font-size: 1.1rem; }
+        
         .cat-row { margin-bottom: 12px; }
         .cat-header { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.95rem; }
         .progress-bar { height: 10px; background-color: var(--bar-bg); border-radius: 5px; overflow: hidden; }
         .progress-fill { height: 100%; border-radius: 5px; transition: width 0.5s ease; }
+
         .toolbar-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .toolbar-full { margin-top: 10px; }
         #fileInput { display: none; }
     </style>
 </head>
 <body>
-    <div id="backupAlert" onclick="exportToCSV()">⚠️ 提醒：您已經超過 7 天沒有備份資料了。點此立即備份 (輸出)。</div>
-    <div class="container">
-        <h2>📓 智能記帳 PWA</h2>
-        </div>
-    
-    <script>
-        // --- 這裡貼上原本的所有 JavaScript ---
-        // (請複製上一版的 script 內容)
-    </script>
 
-    <script>
-        // --- PWA 註冊 Service Worker ---
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then(reg => console.log('Service Worker 註冊成功', reg))
-                    .catch(err => console.log('Service Worker 註冊失敗', err));
+<div id="backupAlert" onclick="exportToCSV()">
+    ⚠️ 提醒：您已經超過 7 天沒有備份資料了。點此立即備份 (輸出)。
+</div>
+
+<div class="container">
+    <h2>📓 智能記帳 PWA</h2>
+
+    <div class="card">
+        <div class="type-switcher">
+            <div class="type-option active expense" id="tabExpense" onclick="switchType('expense')">支出</div>
+            <div class="type-option" id="tabIncome" onclick="switchType('income')">收入</div>
+        </div>
+
+        <div class="form-group">
+            <label>日期</label>
+            <input type="date" id="dateInput">
+        </div>
+
+        <div class="form-group">
+            <label>類別</label>
+            <select id="categoryInput" onchange="updateItemSuggestions()">
+                </select>
+        </div>
+
+        <div class="form-group">
+            <label>項目說明</label>
+            <input type="text" id="descInput" list="itemSuggestions" placeholder="例如：午餐">
+            <datalist id="itemSuggestions"></datalist>
+        </div>
+
+        <div class="form-group">
+            <label>金額 ($)</label>
+            <input type="number" id="amountInput" placeholder="0.0" inputmode="decimal">
+        </div>
+
+        <button class="btn-add" id="btnAdd" onclick="submitRecord()">➕ 記一筆</button>
+        <button class="btn-update" id="btnUpdate" onclick="submitRecord()">💾 保存修改</button>
+        <button class="btn-cancel" id="btnCancel" onclick="cancelEdit()">❌ 取消修改</button>
+    </div>
+
+    <div class="card">
+        <h3>📊 統計分析</h3>
+        
+        <div class="form-group">
+            <select id="statsMonthSelect" onchange="renderStats()">
+                <option value="all">所有時間</option>
+            </select>
+        </div>
+
+        <div class="stats-summary">
+            <div class="stat-box">
+                <small>總收入</small>
+                <span class="text-income" id="statIncome">$0</span>
+            </div>
+            <div class="stat-box">
+                <small>總支出</small>
+                <span class="text-expense" id="statExpense">$0</span>
+            </div>
+            <div class="stat-box">
+                <small>淨結餘</small>
+                <span id="statBalance">$0</span>
+            </div>
+        </div>
+
+        <div class="type-switcher" style="margin-bottom: 20px;">
+            <div class="type-option active expense" id="statTabExpense" onclick="switchStatsType('expense')">支出分佈</div>
+            <div class="type-option" id="statTabIncome" onclick="switchStatsType('income')">收入分佈</div>
+        </div>
+
+        <div id="statsBreakdown"></div>
+    </div>
+
+    <div class="card">
+        <h3>📜 紀錄查詢</h3>
+        
+        <div class="filter-container">
+            <div class="date-range-grid">
+                <div>
+                    <span class="filter-label">開始日期</span>
+                    <input type="date" id="searchStart" onchange="handleSearch()">
+                </div>
+                <div>
+                    <span class="filter-label">結束日期</span>
+                    <input type="date" id="searchEnd" onchange="handleSearch()">
+                </div>
+            </div>
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" placeholder="關鍵字或金額..." oninput="handleSearch()">
+                <button class="btn-reset" onclick="resetSearch()">重置</button>
+            </div>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table id="recordTable">
+                <thead>
+                    <tr>
+                        <th width="20%">日期</th>
+                        <th width="20%">類別</th>
+                        <th>項目</th>
+                        <th class="amount">金額</th>
+                        <th width="15%">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="toolbar-grid">
+        <button class="btn-export" onclick="exportToCSV()">📤 輸出備份</button>
+        <input type="file" id="fileInput" accept=".csv" onchange="importFromCSV(this)">
+        <button class="btn-import" onclick="document.getElementById('fileInput').click()">📥 匯入還原</button>
+    </div>
+    <div class="toolbar-full">
+        <button class="btn-clear" onclick="clearAllData()">🗑️ 清除所有紀錄</button>
+    </div>
+</div>
+
+<script>
+    // --- 應用程式邏輯 ---
+    const PRESETS = {
+        expense: {
+            "膳食": ["午餐", "晚餐", "早餐", "下午茶", "外賣", "超市買餸", "零食", "飲品"],
+            "交通": ["巴士", "地鐵", "的士", "小巴", "Uber", "入油", "泊車"],
+            "購物": ["日用品", "服飾", "電子產品", "護理用品", "網購"],
+            "家居": ["租金", "水電煤", "寬頻", "電話費", "維修", "管理費"],
+            "娛樂": ["電影", "聚會", "遊戲", "訂閱服務", "旅行"],
+            "醫療": ["睇醫生", "買藥", "保險"],
+            "其他": ["雜費", "利是"]
+        },
+        income: {
+            "薪金": ["月薪", "兼職", "補習"],
+            "獎金": ["花紅", "雙糧", "勤工"],
+            "投資": ["股息", "利息", "賣出股票"],
+            "其他": ["賣二手野", "家人給予", "退款"]
+        }
+    };
+
+    let currentType = 'expense';
+    let currentStatsType = 'expense';
+    let expenses = JSON.parse(localStorage.getItem('myExpenses_v2')) || [];
+    let editingId = null;
+
+    window.onload = function() {
+        document.getElementById('dateInput').valueAsDate = new Date();
+        updateCategoryOptions();
+        checkBackupStatus();
+        refreshAll();
+    };
+
+    // --- PWA 註冊 Service Worker ---
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('Service Worker 註冊成功', reg))
+                .catch(err => console.log('Service Worker 註冊失敗', err));
+        });
+    }
+
+    // --- 輸入與介面邏輯 ---
+    function switchType(type) {
+        currentType = type;
+        document.getElementById('tabExpense').className = `type-option ${type === 'expense' ? 'active expense' : ''}`;
+        document.getElementById('tabIncome').className = `type-option ${type === 'income' ? 'active income' : ''}`;
+        const btnColor = type === 'expense' ? '#e74c3c' : '#2ecc71';
+        document.getElementById('btnAdd').style.backgroundColor = editingId ? '#ff9800' : btnColor;
+        updateCategoryOptions();
+    }
+
+    function updateCategoryOptions() {
+        const catSelect = document.getElementById('categoryInput');
+        const currentVal = catSelect.value;
+        catSelect.innerHTML = "";
+        Object.keys(PRESETS[currentType]).forEach(cat => {
+            const option = document.createElement("option");
+            option.value = cat;
+            option.text = cat;
+            catSelect.appendChild(option);
+        });
+        if (currentVal && PRESETS[currentType][currentVal]) catSelect.value = currentVal;
+        updateItemSuggestions();
+    }
+
+    function updateItemSuggestions() {
+        const category = document.getElementById('categoryInput').value;
+        const datalist = document.getElementById('itemSuggestions');
+        datalist.innerHTML = "";
+        if (PRESETS[currentType][category]) {
+            PRESETS[currentType][category].forEach(item => {
+                const option = document.createElement("option");
+                option.value = item;
+                datalist.appendChild(option);
             });
         }
-    </script>
+    }
+
+    // --- 增刪改邏輯 ---
+    function submitRecord() {
+        const date = document.getElementById('dateInput').value;
+        const category = document.getElementById('categoryInput').value;
+        const desc = document.getElementById('descInput').value.trim();
+        const amountStr = document.getElementById('amountInput').value;
+        const amount = parseFloat(amountStr);
+
+        if (!date || !amountStr) { alert("請輸入日期和金額"); return; }
+
+        if (editingId) {
+            const index = expenses.findIndex(x => x.id === editingId);
+            if (index !== -1) {
+                expenses[index] = {
+                    id: editingId,
+                    type: currentType,
+                    date: date,
+                    category: category,
+                    desc: desc || category,
+                    amount: amount
+                };
+                alert("修改已保存！");
+            }
+            cancelEdit();
+        } else {
+            const record = {
+                id: Date.now(),
+                type: currentType,
+                date: date,
+                category: category,
+                desc: desc || category,
+                amount: amount
+            };
+            expenses.unshift(record);
+        }
+        saveAndRender();
+        if (!editingId) resetForm();
+    }
+
+    function editRecord(id) {
+        const record = expenses.find(x => x.id === id);
+        if (!record) return;
+        editingId = id;
+        document.getElementById('dateInput').value = record.date;
+        document.getElementById('amountInput').value = record.amount;
+        document.getElementById('descInput').value = record.desc;
+        switchType(record.type);
+        document.getElementById('categoryInput').value = record.category;
+        updateItemSuggestions();
+        document.getElementById('btnAdd').style.display = 'none';
+        document.getElementById('btnUpdate').style.display = 'block';
+        document.getElementById('btnCancel').style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelEdit() {
+        editingId = null;
+        resetForm();
+        document.getElementById('btnAdd').style.display = 'block';
+        document.getElementById('btnUpdate').style.display = 'none';
+        document.getElementById('btnCancel').style.display = 'none';
+        switchType(currentType); 
+    }
+
+    function deleteRecord(id) {
+        if (confirm("確定要刪除這筆紀錄嗎？")) {
+            expenses = expenses.filter(x => x.id !== id);
+            saveAndRender();
+            if (editingId === id) cancelEdit();
+        }
+    }
+
+    function resetForm() {
+        document.getElementById('descInput').value = '';
+        document.getElementById('amountInput').value = '';
+        document.getElementById('descInput').focus();
+    }
+
+    function saveAndRender() {
+        expenses.sort((a, b) => new Date(b.date) - new Date(a.date) || b.id - a.id);
+        localStorage.setItem('myExpenses_v2', JSON.stringify(expenses));
+        refreshAll();
+    }
+
+    function refreshAll() {
+        handleSearch();
+        updateMonthSelector();
+        renderStats();
+    }
+
+    // --- 統計分析 ---
+    function switchStatsType(type) {
+        currentStatsType = type;
+        document.getElementById('statTabExpense').className = `type-option ${type === 'expense' ? 'active expense' : ''}`;
+        document.getElementById('statTabIncome').className = `type-option ${type === 'income' ? 'active income' : ''}`;
+        renderStats();
+    }
+
+    function updateMonthSelector() {
+        const selector = document.getElementById('statsMonthSelect');
+        const currentSelection = selector.value;
+        const months = [...new Set(expenses.map(item => item.date.substring(0, 7)))];
+        months.sort().reverse();
+        selector.innerHTML = '<option value="all">所有時間</option>';
+        months.forEach(month => {
+            const option = document.createElement('option');
+            option.value = month;
+            option.text = month;
+            selector.appendChild(option);
+        });
+        if (months.includes(currentSelection)) selector.value = currentSelection;
+        else if (months.length > 0 && currentSelection !== 'all') selector.value = months[0];
+        else selector.value = 'all';
+    }
+
+    function renderStats() {
+        const selectedMonth = document.getElementById('statsMonthSelect').value;
+        let filteredData = expenses;
+        if (selectedMonth !== 'all') {
+            filteredData = expenses.filter(item => item.date.startsWith(selectedMonth));
+        }
+
+        let totalIncome = 0;
+        let totalExpense = 0;
+        let categoryBreakdown = {};
+
+        filteredData.forEach(item => {
+            if (item.type === 'income') {
+                totalIncome += item.amount;
+            } else {
+                totalExpense += item.amount;
+            }
+            if (item.type === currentStatsType) {
+                if (!categoryBreakdown[item.category]) categoryBreakdown[item.category] = 0;
+                categoryBreakdown[item.category] += item.amount;
+            }
+        });
+
+        document.getElementById('statIncome').innerText = `$${totalIncome.toLocaleString()}`;
+        document.getElementById('statExpense').innerText = `$${totalExpense.toLocaleString()}`;
+        
+        const balance = totalIncome - totalExpense;
+        const balanceEl = document.getElementById('statBalance');
+        balanceEl.innerText = `$${balance.toLocaleString()}`;
+        balanceEl.style.color = balance >= 0 ? 'var(--income-color)' : 'var(--expense-color)';
+
+        const statsContainer = document.getElementById('statsBreakdown');
+        statsContainer.innerHTML = '';
+        
+        const totalForChart = currentStatsType === 'income' ? totalIncome : totalExpense;
+        const colorVar = currentStatsType === 'income' ? 'var(--income-color)' : 'var(--expense-color)';
+
+        if (totalForChart === 0) {
+            const emptyText = currentStatsType === 'income' ? '無收入紀錄' : '無支出紀錄';
+            statsContainer.innerHTML = `<p style="text-align:center; color:#999;">此期間${emptyText}</p>`;
+            return;
+        }
+
+        const sortedCats = Object.keys(categoryBreakdown).sort((a, b) => categoryBreakdown[b] - categoryBreakdown[a]);
+        sortedCats.forEach(cat => {
+            const amount = categoryBreakdown[cat];
+            const percentage = (amount / totalForChart) * 100;
+            const html = `
+            <div class="cat-row">
+                <div class="cat-header">
+                    <span>${cat}</span>
+                    <span>$${amount.toLocaleString()} <small>(${percentage.toFixed(1)}%)</small></span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${percentage}%; background-color: ${colorVar};"></div>
+                </div>
+            </div>`;
+            statsContainer.innerHTML += html;
+        });
+    }
+
+    // --- 搜尋功能 ---
+    function handleSearch() {
+        const keyword = document.getElementById('searchInput').value.toLowerCase().trim();
+        const start = document.getElementById('searchStart').value;
+        const end = document.getElementById('searchEnd').value;
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+
+        let filtered = expenses;
+        if (start) filtered = filtered.filter(item => item.date >= start);
+        if (end) filtered = filtered.filter(item => item.date <= end);
+        if (keyword) {
+            filtered = filtered.filter(item => 
+                item.category.includes(keyword) || 
+                item.desc.toLowerCase().includes(keyword) || 
+                item.amount.toString().includes(keyword)
+            );
+        }
+
+        if (!keyword && !start && !end) filtered = filtered.slice(0, 50);
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:#999;">找不到相關紀錄</td></tr>';
+            return;
+        }
+
+        filtered.forEach(item => {
+            const isExpense = item.type !== 'income';
+            const colorClass = isExpense ? 'text-expense' : 'text-income';
+            const sign = isExpense ? '-' : '+';
+            const row = `<tr>
+                <td style="font-size:0.85rem; color:#666;">${item.date.substring(5)}</td>
+                <td>${item.category}</td>
+                <td>${item.desc}</td>
+                <td class="amount ${colorClass}">${sign}$${item.amount.toFixed(1)}</td>
+                <td style="text-align:center;">
+                    <button class="action-btn" onclick="editRecord(${item.id})">✏️</button>
+                    <button class="action-btn" onclick="deleteRecord(${item.id})">🗑️</button>
+                </td>
+            </tr>`;
+            tbody.innerHTML += row;
+        });
+    }
+
+    function resetSearch() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('searchStart').value = '';
+        document.getElementById('searchEnd').value = '';
+        handleSearch();
+    }
+
+    // --- 匯出入與備份 ---
+    function exportToCSV() {
+        if (expenses.length === 0) { alert("沒有資料"); return; }
+        localStorage.setItem('lastBackupTime', Date.now());
+        document.getElementById('backupAlert').style.display = 'none';
+
+        let csvContent = "日期,類型,類別,項目說明,金額(HKD)\n";
+        expenses.forEach(item => {
+            const typeName = item.type === 'income' ? '收入' : '支出';
+            const safeDesc = `"${item.desc.replace(/"/g, '""')}"`;
+            const signedAmount = item.type === 'expense' ? -item.amount : item.amount;
+            csvContent += `${item.date},${typeName},${item.category},${safeDesc},${signedAmount}\n`;
+        });
+
+        const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        const now = new Date();
+        const timestamp = now.toISOString().slice(0,10).replace(/-/g,"");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `記帳簿_${timestamp}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function checkBackupStatus() {
+        const lastBackup = localStorage.getItem('lastBackupTime');
+        const alertBox = document.getElementById('backupAlert');
+        const sevenDays = 7 * 24 * 60 * 60 * 1000;
+        if (!lastBackup || (Date.now() - parseInt(lastBackup)) > sevenDays) {
+            if (expenses.length > 0) alertBox.style.display = 'block';
+        } else {
+            alertBox.style.display = 'none';
+        }
+    }
+
+    function importFromCSV(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) { processCSV(e.target.result); input.value = ''; };
+        reader.readAsText(file);
+    }
+
+    function processCSV(csvText) {
+        const lines = csvText.split(/\r\n|\n/);
+        let addedCount = 0; let replacedCount = 0;
+        for (let i = 1; i < lines.length; i++) {
+            const parts = parseCSVLine(lines[i].trim());
+            if (parts.length >= 5) {
+                const [date, typeText, category, descRaw, amountRaw] = parts;
+                if (!date) continue;
+                let amount = parseFloat(amountRaw);
+                let type = (typeText === '收入' || amount > 0) ? 'income' : 'expense';
+                if (typeText === '支出' && amount < 0) amount = Math.abs(amount);
+                const desc = descRaw.replace(/^"|"$/g, '').replace(/""/g, '"');
+                const finalAmount = Math.abs(amount);
+
+                const newRecord = { id: Date.now() + i, type: type, date: date, category: category, desc: desc, amount: finalAmount };
+                const existingIndex = expenses.findIndex(item => 
+                    item.date === newRecord.date && item.type === newRecord.type &&
+                    item.category === newRecord.category && item.desc === newRecord.desc &&
+                    Math.abs(item.amount - newRecord.amount) < 0.001
+                );
+
+                if (existingIndex !== -1) {
+                    expenses.splice(existingIndex, 1);
+                    expenses.push(newRecord);
+                    replacedCount++;
+                } else {
+                    expenses.push(newRecord);
+                    addedCount++;
+                }
+            }
+        }
+        saveAndRender();
+        alert(`匯入完成！\n✅ 新增: ${addedCount} 筆\n🔄 更新: ${replacedCount} 筆`);
+    }
+
+    function parseCSVLine(text) {
+        let result = [], current = '', inQuotes = false;
+        for (let i = 0; i < text.length; i++) {
+            let char = text[i];
+            if (char === '"' && text[i+1] === '"') { current += '"'; i++; }
+            else if (char === '"') { inQuotes = !inQuotes; }
+            else if (char === ',' && !inQuotes) { result.push(current); current = ''; }
+            else { current += char; }
+        }
+        result.push(current);
+        return result;
+    }
+
+    function clearAllData() {
+        if (confirm("⚠️ 警告：確定要刪除所有資料嗎？")) {
+            expenses = [];
+            localStorage.removeItem('myExpenses_v2');
+            localStorage.removeItem('lastBackupTime');
+            refreshAll();
+        }
+    }
+</script>
+
 </body>
 </html>
